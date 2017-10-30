@@ -1,0 +1,115 @@
+\documentclass{article}
+\usepackage{\string ~/LATEXStyle}
+\title{Stat 574B: HW 3 Problem 1}
+\author{Nate Hattersley}
+\date{Octorber 18, 2017}
+\Sexpr{opts_chunk$set(tidy=T, out.width=".7\\linewidth", fig.align="center",tidy.opts=list(width.cutoff=60))}
+\Sexpr{suppressWarnings(library(ggplot2));library(xtable)}
+\begin{document}
+\maketitle
+\subsection*{part a.}
+
+\subsubsection*{\textbullet\, True Posterior}
+
+We know from the previous homework that the conjugate posterior of this binomial sample with a Beta(2,2) prior is Beta(21,8).
+
+\subsubsection*{\textbullet\, Normal Approximation}
+
+The large-sample normal approximation to the binomial is simple. If $\hat{p}$ is the sample proportion of successes out of $n$ draws, then we say \\
+\begin{equation*}
+\hat{\theta}_{MLE}\thicksim N(\hat{p},\frac{\hat{p}(1-\hat{p})}{n})
+\end{equation*}
+Or in our case,\\
+\begin{equation*}
+\hat{\theta}_{MLE}\thicksim N(.76,.0854^2)
+\end{equation*}
+
+\subsubsection*{\textbullet\, Laplace Approximation}
+For this derivation we need the likelihood, prior, and mode of the posterior distribution:\\\\
+
+\begin{align*}
+L(\theta|x) &= \theta^{\sum\limits_ix_i}(1-\theta)^{n-\sum\limits_ix_i}\\\\
+p(\theta) &= \frac{\theta(1-\theta)}{B(2,2)}\\\\
+\theta_* &= \frac{\alpha^*-1}{\alpha^*+\beta^*-2} = \frac{20}{27}\\
+\end{align*}
+
+\pagebreak
+The mean of the Laplace approximation is the mode of the posterior, $\theta_*$ We find $l(\theta)$ and take the negative reciprocal of its second derivative evaluated at $\theta_*$ in order to find the variance of the approximation:\\
+\begin{align*}
+&l(\theta) = (\sum\limits_ix_i+1)\text{log}\,\theta + (n-\sum\limits_ix_i+1)\text{log}(1-\theta) - \text{log(B(2,2))}\\\\
+&\frac{d^2l(\theta)}{d\theta^2} = -\frac{\sum\limits_ix_i+1}{\theta^2}-\frac{n-\sum\limits_ix_i+1}{(1-\theta)^2}\\\\
+&\frac{d^2l(\theta)}{d\theta^2}\Bigr|_{\theta=\theta_*}=-140.5929\\
+\end{align*}
+
+Hence we find that the Laplace approximation is:
+
+\begin{equation*}
+\hat{\theta}_L\thicksim N(.74,.0843^2)
+\end{equation*}
+
+\subsubsection*{\textbullet\, Comparison}
+Here is a plot of all three densities, on the region of $\theta\in[0.4,1]$ since that is where most of the density is.\\\\
+
+<<p1pa, echo=F>>=
+x <- seq(0.4,1,.001)
+n <- length(x)
+
+## Plot from part a
+density.df <- data.frame(
+	TAG=rep(c("NORMAL","LAPLACE","BETA POSTERIOR"),each=n),
+	X=rep(x,times=3),
+	DENSITY=c(dnorm(x,.76,.0854),dnorm(x,.74,.0843),dbeta(x,21,8))
+)
+
+ggplot(density.df,aes(x=X,y=DENSITY,col=TAG)) + geom_line()
+
+
+## Alpha-quantiles for each distribution
+al <- c(.1,.05,.025,.01)
+
+mle.quantiles <- data.frame(alpha=al, lower=(lower=qnorm(al,.76,.0854)),upper=(upper=qnorm(1-al,.76,.0854)),size=upper-lower)
+
+laplace.quantiles <- data.frame(alpha=al, lower=(lower=qnorm(al,.74,.0843)),upper=(upper=qnorm(1-al,.74,.0843)),size=upper-lower)
+
+beta.quantiles <- data.frame(alpha=al,lower=(lower=qbeta(al,21,8)),upper=(upper=qbeta(1-al,21,8)),size=upper-lower)
+
+all.quantiles <- cbind(Distribution=rep(c("MLE","Laplace","True Posterior"),each=length(al)),rbind(mle.quantiles,laplace.quantiles,beta.quantiles))
+
+all.quantiles <- xtable(all.quantiles,caption="Quantiles",digits=4)
+
+## Summaries of each distribuion
+means <- xtable(data.frame(Distribution=c("MLE","Laplace","Beta Posterior"),Mean=c(.76,20/27,21/29),SD=c(.0854,.0843,.0816)),caption="Summaries",digits=4)
+
+@
+
+Comparing the three, the Laplace approximation and the true posterior have the same mode, since Laplace is symmetric. The MLE approximation is shifted to the right of the other two since it doesn't include the 2/4 successes/tries of the prior. The true posterior density seems to increase for lower values of $\theta$ on the left side of the peak, and decrease for lower values of $\theta$ on the right side. So it seems that both approximations have a positive bias with respect to the true posterior.
+
+\subsection*{part b.}
+
+Means, standard deviations, and quantiles were all straightforward to compute. Here is a summary of means and standard deviations for each distribution:
+
+<<p1pb1,results='asis',echo=F>>=
+## Use with Rnw and chunk option results='asis'
+## Outputs Summary Table in LATEX
+print(means,caption.placement="top",include.rownames=F)
+@
+
+Here are the equal-tails quantiles for each distribution given differing levels of $\alpha$. The size column is just the difference between the upper- and lower-$\alpha$ tails of the $1-\alpha\%$ confidence interval.
+
+<<p1pb2,results='asis',echo=F>>=
+## Use with Rnw and chunk option results='asis'
+## Outputs Quantiles Table in LATEX
+print(all.quantiles[order(all.quantiles$alpha,decreasing = T),],caption.placement="top",include.rownames=F,hline.after=c(-1,0,3,6,9,nrow(x)))
+@
+
+I was right in my hypothesis from part a) that the MLE approximation has a higher mean than the other two. Also, the Beta distribution is skewed left, so its mean is lower than its mode. The variation is also, in order from smallest to largest, Beta, Laplace, MLE. This means that the true posterior distribution gives us the tightest confidence intervals on $\theta$.
+
+\pagebreak
+
+\subsection*{Code}
+<<eval=F>>=
+<<p1pa>>
+<<p1pb1>>
+<<p1pb2>>
+@
+\end{document}

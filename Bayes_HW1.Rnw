@@ -1,0 +1,354 @@
+\documentclass{article}
+\usepackage{Style}
+\title{STAT 574B Homework 1}
+\author{Nathan Hattersley}
+\date{September 13, 2017}
+\begin{document}
+\maketitle
+
+
+\Sexpr{library(magrittr);library(TeachingDemos);suppressWarnings(library(ggplot2))}
+\Sexpr{opts_chunk$set(tidy=T, out.width=".6\\linewidth", fig.align="center",tidy.opts=list(width.cutoff=60))}
+
+\subsection*{Problem 1}
+\subsubsection*{part a}
+In this part we want an exact 95\% confidence interval on the trial of 25 patients that did not have Lyme disease. The R code shown below extracts the ``confidence interval'' property of the ``binom.test'' object to give us a 95\% confidence interval of  $\theta\in\left(0.549, 0.906\right)$:
+<<>>==
+binom.test(19,25)$conf.int
+@
+Compared with the large-sample confidence interval $\theta\in\left(0.593, 0.927\right)$, this interval is wider, expressing greater uncertainty about the true value of $\theta$. This is likely because the sample is so small (25) that the large-sample's z-score used to scale the sample variance about the mean, 1.96, is not a totally accurate representation of the $\alpha/2$ tail probability on either side.
+
+\subsubsection*{part b}
+This is the same analysis of part a, except now we are considering the hypothethical wherein 21/29 patients have received the true negative diagnosis. This translates to a confidence interval of $\theta\in\left(0.528, 0.873\right)$:
+<<>>==
+binom.test(21,29)$conf.int
+@
+This interval is slightly tighter than that calculated in part a, and its midpoint is slightly lower. The constriction of the interval arises from the increased sample size and hence lower sample variance. The midpoint moved because, marginally, we are tacking on 4 trials at a 50\% success rate, a rate lower than our observed sample rate. This would plainly lower the sample proportion of successes.
+
+
+
+
+
+\subsubsection*{part c}
+We know that the mean of the Beta distribution is $\frac{\alpha}{\alpha+\beta}$, so for priors (1),(2), and (4), whose expected values are below the sample proportion of 0.76, we expect the posterior expected value of $\theta|Y_1,...\,,Y_{25}$ to be below the sample proportion of successes, $\bar{Y}$. For (3), with a prior expected value of 0.8, we expect the opposite, that the posterior expectation will be above 0.76. The lower the variance of the prior distribution, the weaker the data's effect on the posterior will be, so for prior (4), the posterior expectation will be closer to 0.5 than will prior (1), although they have the same prior expectation. I've only included the code to produce one graph, as the rest are trivially similar. \\\textbf{Note:} I graphed the likelihood in blue, prior in red, and posterior in black for each example. I also did not pay attention to y-axis scale so that the densities all looked ``pretty.''
+
+<<part,eval=F>>==
+par(mfrow=c(2,2))
+likelihood <- function(s){return(s^19 * (1-s)^6)}
+## Plot the likelihood in blue
+curve(likelihood(x), from=0, to=1, col="blue", ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+par(new=T)
+## Plot the prior in red
+curve(dbeta(x,2,2), from=0, to=1, col="red", ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+par(new=T)
+## Plot the posterior in black
+curve(dbeta(x,21,8), from=0, to=1, ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+title("Beta(2,2) Prior")
+@ 
+
+<<echo=F, out.width=".6\\linewidth">>==
+<<part>>
+## CURVE (2)
+## Plot the likelihood in blue
+curve(likelihood(x), from=0, to=1, col="blue", ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+par(new=T)
+## Plot the prior in red
+curve(dbeta(x,2,8), from=0, to=1, col="red", ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+par(new=T)
+## Plot the posterior in black
+curve(dbeta(x,21,14), from=0, to=1, ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+title("Beta(2,8) Prior")
+
+
+## CURVE(3)
+## Plot the likelihood in blue
+curve(likelihood(x), from=0, to=1, col="blue", ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+par(new=T)
+## Plot the prior in red
+curve(dbeta(x,8,2), from=0, to=1, col="red", ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+par(new=T)
+## Plot the posterior in black
+curve(dbeta(x,27,8), from=0, to=1, ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+title("Beta(8,2) Prior")
+
+
+
+## CURVE (4)
+## Plot the likelihood in blue
+curve(likelihood(x), from=0, to=1, col="blue", ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+par(new=T)
+## Plot the prior in red
+curve(dbeta(x,11,11), from=0, to=1, col="red", ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+par(new=T)
+## Plot the posterior in black
+curve(dbeta(x,30,17), from=0, to=1, ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+title("Beta(11,11) Prior")
+@
+
+
+
+
+
+\subsubsection*{part d}
+We know the formula for the posterior of a Beta given a binomial sampling of $y$ successes in $n$ trials,
+
+\begin{equation*}
+\theta | Y_1,...\,,Y_{25} \thicksim Beta(\alpha+y,\beta+n-y)
+\end{equation*} Hence we calculate that our particular posterior is a $Beta(21,8)$ distribution. The mean and variance of $\theta\thicksim Beta(\alpha,\beta)$ are 
+\begin{align*}
+E(\theta|\alpha,\beta)&=\frac{\alpha}{\alpha+\beta}\\
+V(\theta|\alpha,\beta)&=\frac{\alpha\beta}{\left(\alpha+\beta\right)^2\left(\alpha+\beta+1\right)}
+\end{align*}
+\\For this example we have \begin{align*}
+E(\theta|y_1,...\,,y_{25})&=0.724,\\
+SD(\theta|y_1,...\,,y_{25})&=\sqrt{V(\theta|y_1,...\,,y_{25})}=0.0816
+\end{align*}
+\\A 95\% HPD confidence interval is $\theta\in\left(0.563,0.877\right)$, while a quantile-based 95\% interval is $\theta\in\left(0.551, 0.868\right)$.
+<<>>==
+## HPD Confidence Interval
+hpd(qbeta, shape1=21, shape2=8)
+## Quantile-based Confidence Interval
+qbeta(c(.025,.975), shape1=21, shape2=8)
+@
+The Bayesian quantile-based confidence interval looks approximately closest to the Agresti-Coull confidence interval. (I did a lot of scrolling up and down and eye-balling, so I wouldn't express 95\% confidence in my judgment.) However, it makes intuitive sense that a prior with mean 0.5 would yield a posterior whose confidence intervals are closer to a sample that had four trials at a marginal success rate of 0.5 tacked on. It seems Agresti and Coull inflected a frequentist ``a prior-i'' prior of some sort on the data.
+
+
+
+
+\subsubsection*{part e}
+At first blush I considered specifying a prior that matched the historical specificity of the HIV diagnostic measure mentioned in the article. However, I figured that it would be more appropriate to conduct a hypothesis test to see if a posterior confidence band would contain the specificity, .9999, of the HIV test. Hence I found a little difficult the specification of an ``informed'' prior. I also chose not to use the ``idiot's'' reference prior of $Beta(1,1)$ since I was feeling experimental. So I went with a prior whose expected value was less than 0.5, as I wanted to be \emph{really convinced} that the diagnostic was a success. I went with a $Beta(1,3)$, which gave the pretty figures $E(\theta)=.25,\,V(\theta)=.0375$. Below, I plot the likelihood, prior, and posterior, then I calculate the median and 95\% quantile-based confidence interval on the posterior.
+
+<<>>==
+## Plot the likelihood in blue
+curve(likelihood(x), from=0, to=1, col="blue", ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+par(new=T)
+## Plot the prior in red
+curve(dbeta(x,1,3), from=0, to=1, col="red", ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+par(new=T)
+## Plot the posterior in black
+curve(dbeta(x,20,9), from=0, to=1, ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+title("Beta(1,3) Prior")
+
+## alpha/2 tail, median, and (1-alpha/2) tail, respectively
+qbeta(c(.025,.5,.975),20,9)
+@
+This posterior confidence interval is wider than the quantile-based interval from a $Beta(2,2)$ prior, and also contains smaller values (both tails of the former are less than the corresponding tails of the latter). It also does not contain the value $\theta=.9$, which is rather condemning in the sense that our specificity is not very high compared to the historical norm.
+
+
+
+
+
+\subsubsection*{part f}
+
+<<partf1, out.width=".65\\linewidth", echo=F>>=
+## Normalizing likelihood function like in class
+L <- function(s) {
+	ifelse(s > 0 & s < 1,
+		suppressWarnings(exp(19*log(s/0.76) + 6*log((1-s)/0.24))),
+		0)
+}
+## Triangle prior and plot from the lecture notes
+p <- function(s) {
+	ifelse(s > 0 & s < 1,
+		ifelse(s > 0.5,4*(1-s),4*s),
+		0)
+}
+
+## Sampling functions (to play with)
+g <- function(s) {dbeta(s,2,2)}
+sample_g <- function(num) {sort(rbeta(num,2,2))}
+
+
+
+## Start sample, and normalize weight function
+theta <- sample_g(10000)
+numerator <- (L(theta)*p(theta))/max(L(theta)*p(theta))
+denominator <- (g(theta)/max(g(theta)))
+w_tilde <- numerator/denominator
+
+
+## DIAGNOSTICS: Check graph of num+den, w_tildes for extreme values
+w_ratio <- max(w_tilde)/mean(w_tilde)
+@
+For a nice coverage of the support of possible theta values, I wanted a sample function $g$ that had relatively high variance. Also, to suppress possible inflation of weight values, I wanted a $g$ that somewhat closely approximated the shape of the numerator. It took some toying around, but I settled on the $Beta(2,2)$, given its high variance and slightly convex shape. I took 10,000 samples from this Beta density and checked the ratio,
+
+\begin{equation*}
+\frac{max_{\theta}\,\tilde{w}(\theta)}{mean_{\theta}\,\tilde{w}(\theta)}=\Sexpr{round(w_ratio,3)}
+\end{equation*}
+
+\pagebreak
+
+and it was not far off from the example Dr. Bedrick gave in class. I also checked the highest ``point mass'' of the $\tilde{w}(\theta)$,
+
+\begin{equation*}
+\frac{max_{\theta}\,\tilde{w}(\theta)}{\sum_{\theta\in\Theta}\tilde{w}(\theta)}=\Sexpr{round(max(w_tilde)/sum(w_tilde),7)}
+\end{equation*}
+
+and it is absurdly small, giving us reason not to worry about resampling one theta value repeatedly. (It is also 1/10,000th of the max/mean ratio, which I should have figured before doing this analysis.) Below are plots of the numerator (red) and denominator (blue) of the $\tilde{w}(\theta)$ function, which confirm that our $\tilde{w}(\theta)$ values will not be too inflated. I also plot the point mass of $\tilde{w}(\theta)$ in the name of being ever more illustrative:
+
+<<partf2,out.width=".5\\linewidth", echo=F>>=
+## Numerator in red, denom in blue
+plot(theta, numerator, xlim = c(0,1), xlab = expression(theta),main="Coverage of g vs Lp", type = "l",col="red")
+lines(theta, denominator, xlim = c(0,1), type="l",col="blue")
+## Let's normalize so we can treat y-axis values as probabilities
+plot(theta, w_tilde/sum(w_tilde), type="l",xlim=c(0,1),ylab=expression(p(theta)),main="Point Masses for w_tilde")
+
+
+
+## Resample using the w_tilde as weights. 
+## Docs for 'sample' fxn say we don't have to normalize w_tilde
+theta_star <- sample(theta,5000,replace = T,prob = w_tilde)
+
+## Display the desired summary stats
+stats <- list(mean=mean(theta_star),
+	 standard_dev=sd(theta_star),
+	 conf_int=quantile(theta_star,c(.025,.975))
+)
+@
+
+
+\pagebreak
+Now that we feel sufficiently good about our point masses that we may begin to resample. I took 5,000 of these and computed the summary stats as one would a simple Monte Carlo sample. I found:\\
+\begin{center}
+$\begin{tabular}{l|r}
+mean & \Sexpr{round(stats$mean,3)} \\
+standard deviation & \Sexpr{round(stats$standard_dev,3)} \\
+95\% confidence interval & \Sexpr{round(stats$conf_int,3)}
+\end{tabular}$
+\end{center}
+
+I used ggplot for the histogram and kernel density (since it's pretty and more functional). I will work on transitioning to using more ggplot when I can.\\
+
+<<partf3, echo=F>>=
+
+## Histogram and density function
+ggplot(as.data.frame(theta_star),aes(theta_star)) + 
+	geom_histogram(aes(y = ..density..),bins=15,fill="red",alpha=.7) + 
+	geom_density(color="blue") + labs(title="Histogram and Kernel Density of Resampled Thetas")
+@
+
+\begin{tabular}{l}
+\\
+\\
+\textbf{Code:}
+\\
+\end{tabular}
+
+<<eval=F>>==
+<<partf1>>
+<<partf2>>
+<<partf3>>
+@
+
+
+
+\pagebreak
+\subsection*{Problem 2}
+<<echo=F>>=
+fatalities.df <- data.frame(
+	year=1976:1985,
+	accidents=c(24,25,31,31,22,21,26,20,16,22),
+	fatalities=c(734,516,754,877,814,362,764,809,223,1066),
+	rate=c(0.19,.12,.15,.16,.14,.06,.13,.13,.03,.15)
+)
+@
+\subsubsection*{part a}
+To specify a prior, I wanted a Gamma distribution whose mean was twenty. Also, I decided ``surprise'' meant $Pr\left(\theta>32|\,\alpha,\beta\right) \le 0.01$. To decide on the Gamma parameters, I made a helper function to vectorize the search process.
+<<eval=F>>=
+ddgamma <- function(a) {cbind(a,a/20,qgamma(.99,a,a/20))}
+ddgamma(1:20)
+@
+
+Using this function, I found that the first alpha value for which $Pr\left(\theta>32\right) \le 0.01$ is $\alpha=20$. Hence I used a Gamma(20,1) prior distribution.
+\subsubsection*{part b}
+Using the interpretation of $\alpha$ counts in $\beta$ time periods, this prior gives the weight of seeing 20 fatal accidents in one year. Since the data show \Sexpr{with(fatalities.df,sum(accidents))} fatal accidents in \Sexpr{with(fatalities.df,length(accidents))} years, our posterior distribution is Gamma(258,11).
+\subsubsection*{part c}
+Just like the other multi-plots, I plot the likelihood in blue, the prior in red, and the posterior in black.
+<<>>=
+## Kernel of the likelihood
+likelihood <- function(t) {exp(-10*t + 238*log(t))}
+
+## Plot the likelihood in blue
+curve(likelihood(x), from=10, to=40, col="blue", ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+par(new=T)
+
+## Plot the prior in red
+curve(dgamma(x,20,1), from=10, to=40, col="red", ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+par(new=T)
+
+## Plot the posterior in black
+curve(dgamma(x,258,11), from=10, to=40, ylab=expression(p(theta)), xlab=expression(theta), yaxt="n")
+title("Gamma(20,1) Prior for Accident Data")
+@
+This prior has a relatively small weight in comparison to the data's effect on the posterior. The heuristic would be giving the prior one year's weight, while the data have ten years' weight. On the graphs, it certainly seems like the posterior more closely mirrors the likelihood function than it does the prior.
+\subsubsection*{part d}
+Using the example from the BSM book, we see the predictive distribution for $\tilde{Y}$ is nbinom(size=258,mu=258/11). A 95\% predictive interval for this distribution is
+<<>>=
+qnbinom(c(.025,.975), size=258,mu=258/11)
+@
+
+Now, we want to simulate the predictive distribution. That is, we sample random $\theta$ values from the posterior Gamma distribution, then compute 95\% confidence intervals on the resultant Poisson distribution. Using the Monte Carlo method, we can simply take the mean of the 2.5\% and 97.5\% quantiles to estimate the predictive 95\% confidence interval. Here I take 1,000 samples.
+<<>>=
+samp <- rgamma(1000,258,11)
+c(mean(qpois(.025,samp)),mean(qpois(.975,samp)))
+@
+
+There is a slight discrepancy in the upper bound: After multiple trials, I found that every time, our simulated upper bound was closer to 33 than 34. I figured that this has to do with the discrete nature of the negative binomial distribution.
+\subsubsection*{part e}
+If we change the distribution of $Y_i$ to be Poisson($\theta t_i$), then our likelihood function changes:
+\begin{equation*}
+L(\theta|y_1,...\,,y_n,t_1,...\,,t_n) = e^{-\theta\sum_it_i}\theta^{\sum_iy_i}\prod_i\left(t_i^{y_i}/y_i!\right)
+\end{equation*}
+Discarding everything that doesn't pertain to $\theta$, let's examine the kernel of $L(\theta)p(\theta)$, with p being the prior and $\theta \thicksim Gamma(\alpha,\beta)$:
+\begin{align*}
+L(\theta) &\varpropto e^{-\theta\sum_it_i}\theta^{\sum_iy_i}\\
+\implies L(\theta)p(\theta) &\varpropto e^{-\theta(\beta+\sum_it_i)}\theta^{\alpha + \sum_iy_i - 1}
+\end{align*}
+Any Bayesian worth his/her salt would recognize that the above is a kernel of a Gamma($\alpha + \sum_iy_i,\,\beta+\sum_it_i$) random variable. We end our proof there because there is no reason to preoccupy oneself with the nonsense of deriving normalization constants. $\blacksquare$
+\subsubsection*{part f}
+Since we have changed the problem definition a little, it now follows that $\theta$ is more of a rate parameter. If $Y_i$ is the number of fatal accidents and $t_i$ is how many hundred million passenger miles are flown in a given year, then $\theta$ is now approximating how many fatal accidents occur per one hundred million miles flown. In order to come up with a reasonable estimate for $\theta$, I took the expert information from part a) and tried to backtrack. First I modified my dataset:
+<<>>=
+fatalities.df <- within(fatalities.df,{
+	miles <- fatalities/rate
+})
+@
+
+Then I used the mean number of miles flown to estimate the rate of fatal accidents which would produce 20 and 32 accidents in a year:
+<<>>=
+## Mean of our distribution
+20/mean(fatalities.df$miles)
+
+## 99th percentile of our distribution
+32/mean(fatalities.df$miles)
+@
+
+I then recreated the test function like I did in part a), which fixed the mean and calculated the 99th percentile for a vector of numbers. I'm including a slice of interest, too.
+
+<<eval=F>>=
+ddgamma <- function(s) {cbind(s,s/0.00349903,qgamma(.99,s,s/0.00349903))}
+ddgamma(10:50)
+@
+
+The first alpha value for which our 99th percentile was less than the target value was 20, so I chose my prior to be Gamma($20,\,5715.87$). For perspective, a 95\% confidence interval for $\theta$ under this distribution is (\Sexpr{paste(format(qgamma(c(.025,.975),20,5715.87),digits=4,scientific=T), sep=", ")}). Now I'll calculate a 95\% confidence interval on the posterior distribution. Magrittr used for a nicer code presentation:
+
+<<>>=
+## Alpha and Beta prior parameters
+a <- 20; b <- 5715.87
+
+## sum of y and sum of t variables
+sy <- sum(fatalities.df$accidents); st <- sum(fatalities.df$miles)
+
+## Ceci n'est pas une pipe, mais c'est quelque chose que rend plus simple le R.
+qgamma(c(.025,.975),a+sy,b+st) %>% format(digits=4, scientific=T)
+@
+
+
+Now, since we showed now nice the Monte Carlo method works in part d), I'm going to employ it here. On our mileage scale, $8\times 10^{11}$ is 8,000 hundreds of millions of miles, so we need to remember to multiply our theta estimates by 8,000 to get the Poisson parameter. I took 10,000 samples for good coverage. I took the mean Poisson parameter as well as the 95\% quantile-based interval:
+
+<<>>=
+samp <- rgamma(10000,a+sy, b+st)
+(out <- c(mean(qpois(.025,8000*samp)),mean(8000*samp),mean(qpois(.975,8000*samp))))
+@
+
+To conclude, in a year in which passengers travel a total of $8\times 10^{11}$ miles, we expect there to be about \Sexpr{round(out[2])} fatal accidents in a year, with \Sexpr{round(out[1])} to \Sexpr{round(out[3])} a not totally unreasonable range.
+\end{document}

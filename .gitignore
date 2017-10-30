@@ -1,0 +1,9 @@
+packrat/lib*/
+.Rproj.user
+.R*
+*.log
+*.gz
+*.tex
+*.csv
+*.sty
+*.Rproj
